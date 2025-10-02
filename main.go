@@ -3,17 +3,23 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/MarianGheorghiu/chirpy/api"
 )
 
 func main() {
 	const port = "8080"
 	mux := http.NewServeMux()
 
+	apiCfg := &api.APIConfig{}
+
 	files := http.FileServer(http.Dir("app"))
 	dirFilesHandler := http.StripPrefix("/app/", files)
-	mux.Handle("/app/", dirFilesHandler)
+	mux.Handle("/app/", apiCfg.MiddlewareMetricsInc(dirFilesHandler))
 
-	mux.HandleFunc("/healthz", handlerReadiness)
+	mux.HandleFunc("GET /api/healthz", api.HandlerReadiness)
+	mux.HandleFunc("GET /admin/metrics", apiCfg.HandlerAdminMetrics)
+	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerReset)
 
 	server := &http.Server{
 		Addr:    ":" + port,
@@ -25,10 +31,4 @@ func main() {
 		log.Fatal(err)
 	}
 
-}
-
-func handlerReadiness(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(200)
-	w.Write([]byte("OK"))
 }
