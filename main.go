@@ -16,9 +16,15 @@ func main() {
 	const port = "8080"
 
 	godotenv.Load()
+
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL must be set")
+	}
+
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
 	}
 
 	db, err := sql.Open("postgres", dbURL)
@@ -37,7 +43,8 @@ func main() {
 	mux := http.NewServeMux()
 
 	apiCfg := &api.APIConfig{
-		Queries: dbQueries,
+		Queries:  dbQueries,
+		Platform: platform,
 	}
 
 	files := http.FileServer(http.Dir("app"))
@@ -45,7 +52,10 @@ func main() {
 	mux.Handle("/app/", apiCfg.MiddlewareMetricsInc(dirFilesHandler))
 
 	mux.HandleFunc("GET /api/healthz", api.HandlerReadiness)
-	mux.HandleFunc("POST /api/validate_chirp", api.HandlerValidateChirp)
+	mux.HandleFunc("POST /api/chirps", apiCfg.HandlerChirpCreate)
+	mux.HandleFunc("GET /api/chirps", apiCfg.HandlerChirpsList)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.HandlerChirpGet)
+	mux.HandleFunc("POST /api/users", apiCfg.HandlerUsersCreate)
 	mux.HandleFunc("GET /admin/metrics", apiCfg.HandlerAdminMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerReset)
 
