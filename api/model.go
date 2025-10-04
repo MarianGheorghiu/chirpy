@@ -18,8 +18,9 @@ type errorResp struct {
 	Error string `json:"error"`
 }
 
-type parameters struct {
-	Email string `json:"email"`
+type userParameters struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type User struct {
@@ -27,6 +28,7 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Email     string    `json:"email"`
+	Password  string    `json:"-"`
 }
 
 type response struct {
