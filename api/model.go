@@ -12,6 +12,7 @@ type APIConfig struct {
 	fileserverHits atomic.Int32
 	Queries        *database.Queries
 	Platform       string
+	TokenSecret    string
 }
 
 type errorResp struct {
@@ -33,12 +34,13 @@ type User struct {
 
 type response struct {
 	User
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 // input din request
 type chirpCreateInput struct {
-	Body   string    `json:"body"`
-	UserID uuid.UUID `json:"user_id"`
+	Body string `json:"body"`
 }
 
 // DTO de răspuns

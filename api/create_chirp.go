@@ -7,15 +7,30 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/MarianGheorghiu/chirpy/internal/auth"
 	"github.com/MarianGheorghiu/chirpy/internal/database"
 )
 
 func (cfg *APIConfig) HandlerChirpCreate(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "invalid or missing token", nil)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(token, cfg.TokenSecret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "invalid or missing token", nil)
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 	params := chirpCreateInput{}
-	err := decoder.Decode(&params)
+
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
@@ -29,7 +44,7 @@ func (cfg *APIConfig) HandlerChirpCreate(w http.ResponseWriter, r *http.Request)
 
 	dbChirp, err := cfg.Queries.CreateChirp(r.Context(), database.CreateChirpParams{
 		Body:   cleaned,
-		UserID: params.UserID,
+		UserID: userID,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create chrip", err)

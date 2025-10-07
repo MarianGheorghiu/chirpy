@@ -17,6 +17,11 @@ func main() {
 
 	godotenv.Load()
 
+	tokenSecret := os.Getenv("JWT_SECRET")
+	if tokenSecret == "" {
+		log.Fatal("JWT SECRET must be set")
+	}
+
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL must be set")
@@ -43,8 +48,9 @@ func main() {
 	mux := http.NewServeMux()
 
 	apiCfg := &api.APIConfig{
-		Queries:  dbQueries,
-		Platform: platform,
+		Queries:     dbQueries,
+		Platform:    platform,
+		TokenSecret: tokenSecret,
 	}
 
 	files := http.FileServer(http.Dir("app"))
@@ -55,6 +61,9 @@ func main() {
 
 	mux.HandleFunc("POST /api/users", apiCfg.HandlerUsersCreate)
 	mux.HandleFunc("POST /api/login", apiCfg.HandlerLogin)
+
+	mux.HandleFunc("POST /api/refresh", apiCfg.HandlerRefresh)
+	mux.HandleFunc("POST /api/revoke", apiCfg.HandlerRevoke)
 
 	mux.HandleFunc("POST /api/chirps", apiCfg.HandlerChirpCreate)
 	mux.HandleFunc("GET /api/chirps", apiCfg.HandlerChirpsList)
