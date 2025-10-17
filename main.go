@@ -22,6 +22,11 @@ func main() {
 		log.Fatal("JWT SECRET must be set")
 	}
 
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == "" {
+		log.Fatal("POLKA_KEY must be set")
+	}
+
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL must be set")
@@ -51,6 +56,7 @@ func main() {
 		Queries:     dbQueries,
 		Platform:    platform,
 		TokenSecret: tokenSecret,
+		PolkaKey:    polkaKey,
 	}
 
 	files := http.FileServer(http.Dir("app"))
@@ -58,6 +64,8 @@ func main() {
 	mux.Handle("/app/", apiCfg.MiddlewareMetricsInc(dirFilesHandler))
 
 	mux.HandleFunc("GET /api/healthz", api.HandlerReadiness)
+
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.HandlerPolkaWebhooks)
 
 	mux.HandleFunc("POST /api/users", apiCfg.HandlerUsersCreate)
 	mux.HandleFunc("PUT /api/users", apiCfg.HandlerAuthorization)

@@ -53,9 +53,10 @@ func (cfg *APIConfig) HandlerAuthorization(w http.ResponseWriter, r *http.Reques
 	}
 
 	respondWithJSON(w, http.StatusOK, User{
-		ID:        dbUserUpdated.ID,
-		CreatedAt: dbUserUpdated.CreatedAt,
-		UpdatedAt: dbUserUpdated.UpdatedAt,
-		Email:     dbUserUpdated.Email,
+		ID:          dbUserUpdated.ID,
+		CreatedAt:   dbUserUpdated.CreatedAt,
+		UpdatedAt:   dbUserUpdated.UpdatedAt,
+		Email:       dbUserUpdated.Email,
+		IsChirpyRed: dbUserUpdated.IsChirpyRed,
 	})
 }
